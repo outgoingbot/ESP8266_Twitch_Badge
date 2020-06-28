@@ -12,11 +12,12 @@
  -run webserver?
 
  HARDWARE
- WS2812 Pin = 5 - D1 - GPIO5
- MAX7219 Data = HMOSI - D7 - GPIO13
- MAX7219 Clock = HSCLK - D5 - GPIO14 
- MAX7219 Load = 15 - D8 - GPIO15
- 
+ WS2812 Pin =     5 - D1 - GPIO5
+ MAX7219 Data =   HMOSI - D7 - GPIO13
+ MAX7219 Clock =  HSCLK - D5 - GPIO14 
+ MAX7219 Load =   15 - D8 - GPIO15
+ Button 1  =      4 - D2 - GPIO4 
+ Button 2  =      0 - D3 - GPIO0
  */
 
 //Powering the RGBs and the MAX7219 ONLY! with 5v (Vin) but using 3.3v logic. seems to work well
@@ -30,7 +31,7 @@
 #include <LEDMatrixDriver.hpp>
 #define FASTLED_INTERRUPT_RETRY_COUNT 0
 #define FASTLED_ESP8266_RAW_PIN_ORDER
-//#define FASTLED_ALLOW_INTERRUPTS 0
+//#define FASTLED_ALLOW_INTERRUPTS 0 //this may or may not prevent "flickering" (prevents INTERUPTS DURING show();)
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <WebSocketsClient.h>
@@ -69,54 +70,47 @@ uint8_t blue;  //used in getrand
 CRGB leds[N_PIXELS];
 
 const uint8_t LEDMATRIX_CS_PIN = LOAD_PIN;
-// Number of 8x8 segments you are connecting
 const int LEDMATRIX_SEGMENTS = 1;
 const int LEDMATRIX_WIDTH    = LEDMATRIX_SEGMENTS * 8;
-// The LEDMatrixDriver class instance
+
 LEDMatrixDriver lmd(LEDMATRIX_SEGMENTS, LEDMATRIX_CS_PIN);
 
 void setup() {
-lmd.setEnabled(true);
-lmd.setIntensity(2);   // 0 = low, 10 = high
+ lmd.setEnabled(true);
+ lmd.setIntensity(2);   // 0 = low, 10 = high
   
-pinMode(LED_BUILTIN, OUTPUT);
-pinMode(BTN1_PIN,INPUT);
-pinMode(BTN2_PIN,INPUT);
-  
-  
+ pinMode(LED_BUILTIN, OUTPUT);
+ pinMode(BTN1_PIN,INPUT);
+ pinMode(BTN2_PIN,INPUT);
+
  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
  FastLED.setBrightness(BRIGHTNESS);
  FastLED.clear(true);
 
-
-
-  // Connect to WiFi
-  WiFi.begin(ssid,password);
-  Serial.begin(115200);
-  while(WiFi.status() != WL_CONNECTED) {
+ WiFi.begin(ssid,password);
+ Serial.begin(115200);
+ while(WiFi.status() != WL_CONNECTED) {
     digitalWrite(LED_BUILTIN,1);   
     Serial.print(".");
     delay(250);
     digitalWrite(LED_BUILTIN,0);
     delay(250);
     digitalWrite(LED_BUILTIN,0);
-  }
-  digitalWrite(LED_BUILTIN,0);  //On Board LED On when WIFI connected
-  Serial.println();
-  Serial.print("IP Address: "); Serial.println(WiFi.localIP());
+ }
+ digitalWrite(LED_BUILTIN,0);  //On Board LED On when WIFI connected
+ Serial.println();
+ Serial.print("IP Address: "); Serial.println(WiFi.localIP());
 
-  // server address, port, and URL path
-  webSocket.begin("irc-ws.chat.twitch.tv", 80, "/");
+ // server address, port, and URL path
+ webSocket.begin("irc-ws.chat.twitch.tv", 80, "/");
 
-  // event handler
-  webSocket.onEvent(webSocketEvent);
+ // event handler
+ webSocket.onEvent(webSocketEvent);
 
-  // try ever 5000 again if connection has failed
-  webSocket.setReconnectInterval(5000);
-
-  // initialize the FastLED object
-
+ // try ever 5000 again if connection has failed
+ webSocket.setReconnectInterval(5000);
 }
+
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
@@ -212,37 +206,38 @@ for(int x=0; x<8; x++){
 }
 
 void BtnTest(){
-if(digitalRead(BTN1_PIN)==LOW){
-  for(int x=0; x<8; x++){
-     for(int y=0; y<8; y++){
-      lmd.setPixel(x,y,1);
-      lmd.display();
-      delay(10);
-     }
-  }
-  for(int x=0; x<8; x++){
-   for(int y=0; y<8; y++){
-    lmd.setPixel(x,y,0);
-    lmd.display();
-    delay(10);
+  if(digitalRead(BTN1_PIN)==LOW){ //BTN1 Test
+    for(int x=0; x<8; x++){
+      for(int y=0; y<8; y++){
+       lmd.setPixel(x,y,1);
+       lmd.display();
+       delay(10);
+      }
+   }
+   for(int x=0; x<8; x++){
+    for(int y=0; y<8; y++){
+     lmd.setPixel(x,y,0);
+     lmd.display();
+     delay(10);
+    }
    }
   }
-}
-if(digitalRead(BTN2_PIN)==LOW){
-for(int i=0; i<N_PIXELS; i++){
-  digitalWrite(LED_BUILTIN,0);
-  delay(100);
-  getrand();
-  setRgb(i,green,red,blue);
-  digitalWrite(LED_BUILTIN,1);
-  delay(100);
-}
-} 
+  
+  if(digitalRead(BTN2_PIN)==LOW){ //BTN2 Test
+   for(int i=0; i<N_PIXELS; i++){
+     digitalWrite(LED_BUILTIN,0);
+     delay(100);
+     getrand();
+     setRgb(i,green,red,blue);
+     digitalWrite(LED_BUILTIN,1);
+     delay(100);
+   }
+  } 
 }
 
 
 
-void getrand() { // trying to make it //the goal is to get a random forecolor that is not white, then find the opposite of
+void getrand() { //get a random pastel color
       switch (random(0, 3)) {
         case 0:
           green = (random(0, Brange + 1) * 2);
