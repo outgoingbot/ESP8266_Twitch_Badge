@@ -1,5 +1,3 @@
-
-
 /*
  todo
  create gmail and twitch accounts to share
