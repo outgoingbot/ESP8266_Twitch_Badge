@@ -142,7 +142,8 @@ void setup() {
  }
  digitalWrite(LED_BUILTIN,0);  //<--- to get to here the wifi needs to connect to a SSID
  Serial.println();
- Serial.print("IP Address: "); Serial.println(WiFi.localIP());
+ Serial.print("IP Address: "); 
+ Serial.println(WiFi.localIP());
  printStringWithShiftL("CONNECTED !!!   ", 80,2); //see chartable for valid characters. all caps a few symbols, etc
 char ipCharArray[20];
 IPAddress ip = WiFi.localIP();
