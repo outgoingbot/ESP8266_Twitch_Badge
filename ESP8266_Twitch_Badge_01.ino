@@ -3,15 +3,11 @@
  * LINE 119 need to have some sort of serial Terminal where we can prompt for SSID and KEY, as well as Twitch Credentials
  todo
  create gmail and twitch accounts to share
- needs SPI for RGB leds and SPI for led matrix. SPI for fast led might not be required. will led matrix lib support esp8266 spi?
- user enter SSID, passwords, twitch name, etc (USB?)
+ needs SPI for RGB leds and SPI for led matrix. SPI for fast led might not be required. will led matrix lib support esp8266 spi? <-- using spi for max7219 only
+ user enter SSID, passwords, twitch name, etc (USB?)  -update firmware over wifi? -run webserver?
  decide chat keywords and methods. i.e donate, subscribe, moderators, etc
  fun stuff: patters, colors, scroll text, blink
  design boards
-
-
- -update firmware over wifi?
- -run webserver?
 
  HARDWARE
  WS2812 Pin =     5 - D1 - GPIO5
@@ -26,12 +22,16 @@
 //seems to work well but causes the MCU to not reset? capacitance on the line? OR is there something wrong with this board? LM117 or usb port?
 //replaced the diode on the board with a sr24 and the problem above was resolved
 
-
+//-------------------------------------------------------------------------------------------------
 //setLEDxy(x,y,1); // is how to set a pixel. x=0 to 7, y = 0 to 7 right now. the 3rd term is 0 ro 1 for on and off
 //lmd.display(); //must be executed after updating pixels so they get pushed to the diplay
 
 //setPixelColor(i,c); //is how to set a rgb pixel color. where i is 0 to 89 and c is a 32bit number.
 //FastLED.show(); must be exectued after updating pixels so they get pushed tp the display
+
+// !!!!! if a lot of the RGBs are lit up and are all BRIGHT WHITE looking then UNPLUG THE USB CABLE!!!!! they will draw too much current for the
+// USB port to supply !!!!!! software errors can break things!!!! 
+//----------------------------------------------------------------------------------------------
 
 
 #define BTN1_PIN  4 // D2 - GPIO4 
@@ -124,11 +124,15 @@ void setup() {
  
  while(WiFi.status() != WL_CONNECTED) { //the events while the Wifi is not yet connected
     static uint8_t i = 0;
-    if(i=10){
+    i++;
+    if(i==20){
+      Serial.print("\n ----Can not Connect to WIFI !!! ---- \n\n");
       Serial.print("\n ----Press 1 to enter a new SSID and Key---- \n");
+      i=0;
     }
     //do a Serial read here. check for "1"    <--- need to write this code to read serial inputs and store them into the SSID
     //then jump to a function that will prompt for ssid and key one at a time. i.e. "Enter SSID and press Enter"
+    //might need to end the WIFi and redo WIFI.begin(); call when a new SSID and key arrive
     digitalWrite(LED_BUILTIN,1);   
     Serial.print(".");
     delay(250);
@@ -225,7 +229,7 @@ uint32_t Color(uint8_t g, uint8_t r, uint8_t b) {
 
 
 
-void PollButtons(){ //button 1 interupt FALLING EDGE
+void PollButtons(){ //read the Buttons status
   if(!digitalRead(BTN1_PIN)){
     //cli();//stop interrupts
     lmd.clear();
@@ -246,36 +250,9 @@ void PollButtons(){ //button 1 interupt FALLING EDGE
 }
 
 
-
-
-
-void BtnTest(){
-  if(digitalRead(BTN1_PIN)==LOW){ //BTN1 Test
-    Serial.println("BTN1 Pressed");
-    for(int x=0; x<8; x++){
-      int y= 4;
-       lmd.setPixel(x,y,1);
-       lmd.display();
-       delay(10);
-      }
-   }
-  
-  
-  if(digitalRead(BTN2_PIN)==LOW){ //BTN2 Test
-    Serial.println("BTN2 Pressed");
-    for(int x=0; x<8; x++){
-      int y= 4;
-       lmd.setPixel(y,x,1);
-       lmd.display();
-       delay(10);
-      }
-   }
-   ClearMatrix();
-}
-
 void ClearMatrix(){
-for (int x=0; x<8; x++){
-  for (int y=0; y<8; y++){
+for (int x=0; x<numCols; x++){
+  for (int y=0; y<numRows; y++){
     lmd.setPixel(x,y,0);
   }
 }
