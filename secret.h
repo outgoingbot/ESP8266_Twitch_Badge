@@ -1,5 +1,5 @@
-#define SECRET_SSID "SSID"      // replace YOUR_SSID with your WiFi network name
-#define SECRET_PASS "password"  // replace YOUR_PASSWORD with your WiFi password
+#define SECRET_SSID "myWIFI"      // replace YOUR_SSID with your WiFi network name
+#define SECRET_PASS "myPassword"  // replace YOUR_PASSWORD with your WiFi password
 
 #define TWITCH_OAUTH_TOKEN  "YOUR_OAUTH_TOKEN" // per Twitch's API developer guide: 
                                                // https://twitchapps.com/tmi
